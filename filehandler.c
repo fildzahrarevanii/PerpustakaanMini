@@ -2,24 +2,42 @@
 
 #include "perpustakaan.h"
 
-#ifdef _WIN32
-#include <direct.h>
-#else
-#include <sys/stat.h>
-#include <sys/types.h>
-#endif
+void ensure_data_files(void){
+    FILE *f;
 
-// buka file dengan mode, jika gagal kembalikan NULL
-FILE* buka_file(const char *path, const char *mode){
-    FILE *f = fopen(path, mode);
-    return f;
-}
+    // login.txt default
+    f = fopen(FILE_LOGIN, "r");
+    if(!f){
+        f = fopen(FILE_LOGIN, "w");
+        if(f){
+            fprintf(f, "admin admin\n");
+            fclose(f);
+            printf("(INFO) File login.txt dibuat dengan user default: admin/admin\n");
+        }
+    } else{
+        fclose(f);
+    }
 
-void ensure_data_files_exist(){
+    // setting.txt default
+    f = fopen(FILE_SETTING, "r");
+    if(!f){
+        f = fopen(FILE_SETTING, "w");
+        if(f){
+            fprintf(f, "MAX_HARI_PINJAM=7\n");
+            fprintf(f, "DENDA_PER_HARI=1000\n");
+            fclose(f);
+            printf("(INFO) File setting.txt dibuat dengan nilai default.\n");
+        }
+    } else{
+        fclose(f);
+    }
 
-#ifdef _WIN32
-    struct stat st = {0};
-    if(stat("data", &st) == -1) mkdir("data", 0755);
-#else
-    _mkdir
+    f = fopen(FILE_BUKU, "a");
+    if(f) fclose(f);
+
+    f = fopen(FILE_ANGGOTA, "a");
+    if(f) fclose(f);
+
+    f = fopen(FILE_PINJAMAN, "a");
+    if(f) fclose(f);
 }
