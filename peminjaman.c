@@ -1,10 +1,13 @@
 // peminjaman.c
+#include "perpustakaan.h" // Ditambahkan agar tahu fungsi dari file lain
+#include "denda.h"        // Ditambahkan agar tahu fungsi hitung_denda
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
 // Struktur untuk transaksi peminjaman
+// CATATAN: Ini adalah struct lokal, berbeda dari 'peminjaman' di perpustakaan.h
 typedef struct {
     int id_transaksi;
     int id_anggota;
@@ -14,42 +17,8 @@ typedef struct {
     int denda;
 } Transaksi;
 
-// Fungsi untuk membaca setting denda dari file
-int baca_setting_denda() {
-    FILE *file = fopen("data/setting.txt", "r");
-    if (!file) {
-        printf("Error: Tidak dapat membuka setting.txt\n");
-        return 0;
-    }
-    char line[100];
-    int denda = 0;
-    while (fgets(line, sizeof(line), file)) {
-        if (sscanf(line, "denda_per_hari: %d", &denda) == 1) {
-            break;
-        }
-    }
-    fclose(file);
-    return denda;
-}
-
-// Fungsi untuk menghitung denda (dipanggil dari denda.c jika diperlukan)
-int hitung_denda(char *tanggal_peminjaman, char *tanggal_pengembalian, int denda_per_hari) {
-    // Sederhana: asumsikan tanggal dalam format YYYY-MM-DD
-    // Hitung selisih hari (implementasi sederhana, tidak akurat untuk bulan/tahun)
-    int tahun1, bulan1, hari1, tahun2, bulan2, hari2;
-    sscanf(tanggal_peminjaman, "%d-%d-%d", &tahun1, &bulan1, &hari1);
-    sscanf(tanggal_pengembalian, "%d-%d-%d", &tahun2, &bulan2, &hari2);
-    
-    // Hitung selisih hari (asumsi bulan 30 hari, tahun 365 hari untuk kesederhanaan)
-    int hari_peminjaman = hari1 + bulan1 * 30 + tahun1 * 365;
-    int hari_pengembalian = hari2 + bulan2 * 30 + tahun2 * 365;
-    int selisih = hari_pengembalian - hari_peminjaman;
-    
-    if (selisih > 7) { // Asumsi batas 7 hari tanpa denda
-        return (selisih - 7) * denda_per_hari;
-    }
-    return 0;
-}
+// FUNGSI 'baca_setting_denda' DIHAPUS (sudah ada di denda.c)
+// FUNGSI 'hitung_denda' DIHAPUS (sudah ada di denda.c)
 
 // Fungsi untuk menyimpan transaksi ke file
 void simpan_transaksi(Transaksi t) {
@@ -62,8 +31,8 @@ void simpan_transaksi(Transaksi t) {
     fclose(file);
 }
 
-// Fungsi untuk peminjaman buku
-void peminjaman_buku() {
+// Diubah: void peminjaman_buku() -> void pinjam_buku()
+void pinjam_buku() {
     Transaksi t;
     printf("Masukkan ID Transaksi: ");
     scanf("%d", &t.id_transaksi);
@@ -84,8 +53,8 @@ void peminjaman_buku() {
     printf("Peminjaman berhasil disimpan.\n");
 }
 
-// Fungsi untuk pengembalian buku
-void pengembalian_buku() {
+// Diubah: void pengembalian_buku() -> void kembalikan_buku()
+void kembalikan_buku() {
     int id_transaksi;
     char tanggal_pengembalian[11];
     printf("Masukkan ID Transaksi: ");
@@ -106,8 +75,12 @@ void pengembalian_buku() {
     while (fscanf(file, "%d %d %d %s %s %d", &t.id_transaksi, &t.id_anggota, &t.id_buku, t.tanggal_peminjaman, t.tanggal_pengembalian, &t.denda) != EOF) {
         if (t.id_transaksi == id_transaksi && strlen(t.tanggal_pengembalian) == 0) {
             strcpy(t.tanggal_pengembalian, tanggal_pengembalian);
-            int denda_per_hari = baca_setting_denda();
-            t.denda = hitung_denda(t.tanggal_peminjaman, t.tanggal_pengembalian, denda_per_hari);
+            
+            // Diubah: Memanggil fungsi yang benar dari util.c
+            int denda_per_hari = get_denda_per_hari(); 
+            // Memanggil fungsi dari denda.c
+            t.denda = hitung_denda(t.tanggal_peminjaman, t.tanggal_pengembalian, denda_per_hari); 
+            
             found = 1;
             printf("Denda: %d\n", t.denda);
             // Update status
@@ -128,20 +101,4 @@ void pengembalian_buku() {
     }
 }
 
-int main() {
-    int pilihan;
-    while (1) {
-        printf("\nMenu:\n1. Peminjaman Buku\n2. Pengembalian Buku\n3. Keluar\nPilih: ");
-        scanf("%d", &pilihan);
-        if (pilihan == 1) {
-            peminjaman_buku();
-        } else if (pilihan == 2) {
-            pengembalian_buku();
-        } else if (pilihan == 3) {
-            break;
-        } else {
-            printf("Pilihan tidak valid.\n");
-        }
-    }
-    return 0;
-} 
+// FUNGSI 'main' DIHAPUS (untuk menghindari error 'multiple definition')
